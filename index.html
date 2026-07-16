@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Simulación interactiva de física de partículas con gravedad, fuerzas elásticas, fuegos artificiales y fluidos.">
+  <title>Simulador de Gravedad y Partículas ✦ Gravedad-fuego</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Screen canvas for render -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Complete User Interface Overlay -->
+  <div class="ui-container">
+    
+    <!-- Top Bar: Title & Panel Toggle -->
+    <header class="interactive">
+      <div class="title-area">
+        <h1>Gravedad-Fuego <span style="font-size: 14px; font-weight: 300; opacity: 0.7;">✦ Simulación Física</span></h1>
+        <p>Arrastra el ratón para mover el emisor de partículas. Pulsa H para ver/ocultar controles.</p>
+      </div>
+      
+      <button class="toggle-panel-btn active" id="togglePanelBtn" aria-label="Mostrar/Ocultar Controles">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Floating Glassmorphic Control Panel -->
+    <div class="control-panel interactive" id="controlPanel">
+      
+      <!-- Presets Area -->
+      <div class="panel-section">
+        <h3>Simulaciones</h3>
+        <div class="presets-grid">
+          <button class="btn-preset active" data-preset="1">Chispas <span class="kbd-hint">1</span></button>
+          <button class="btn-preset" data-preset="2">Fuegos <span class="kbd-hint">2</span></button>
+          <button class="btn-preset" data-preset="3">Cascada <span class="kbd-hint">3</span></button>
+          <button class="btn-preset" data-preset="4">Volcán <span class="kbd-hint">4</span></button>
+          <button class="btn-preset" data-preset="5">Tormenta <span class="kbd-hint">5</span></button>
+          <button class="btn-preset preset-warp-btn" data-preset="6">Warp <span class="kbd-hint">6</span></button>
+        </div>
+      </div>
+
+      <!-- Live Physics Controls -->
+      <div class="panel-section">
+        <h3>Física & Emisión</h3>
+        
+        <!-- Max Particles -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Partículas Activas</span>
+            <span class="value" id="valParticles">1000</span>
+          </div>
+          <input type="range" id="sliderParticles" min="100" max="5000" step="100" value="1000">
+        </div>
+
+        <!-- Gravity Strength -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Gravedad</span>
+            <span class="value" id="valGravity">0.15</span>
+          </div>
+          <input type="range" id="sliderGravity" min="-0.5" max="1.5" step="0.05" value="0.15">
+        </div>
+
+        <!-- Gravity Angle -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Ángulo de Gravedad</span>
+            <span class="value" id="valAngle">90°</span>
+          </div>
+          <input type="range" id="sliderAngle" min="0" max="360" step="5" value="90">
+        </div>
+
+        <!-- Particle Lifespan -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Vida Útil (frames)</span>
+            <span class="value" id="valLife">120</span>
+          </div>
+          <input type="range" id="sliderLife" min="30" max="300" step="10" value="120">
+        </div>
+        
+        <!-- Ejection Speed -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Velocidad de Salida</span>
+            <span class="value" id="valSpeed">5</span>
+          </div>
+          <input type="range" id="sliderSpeed" min="1" max="15" step="0.5" value="5">
+        </div>
+
+        <!-- Radio del Emisor -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Radio del Emisor</span>
+            <span class="value" id="valEmitterRadius">0px</span>
+          </div>
+          <input type="range" id="sliderEmitterRadius" min="0" max="150" step="5" value="0">
+        </div>
+
+        <!-- Dispersión / Spread -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Dispersión</span>
+            <span class="value" id="valDispersion">360°</span>
+          </div>
+          <input type="range" id="sliderDispersion" min="0" max="360" step="10" value="360">
+        </div>
+
+        <!-- Longitud de Estela / Trail Length -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Longitud de Estela</span>
+            <span class="value" id="valTrailLength">2.0</span>
+          </div>
+          <input type="range" id="sliderTrailLength" min="0" max="8" step="0.2" value="2.0">
+        </div>
+
+        <!-- Toggles de comportamiento -->
+        <div class="toggle-switch-group">
+          <span>Solo con clic/arrastre</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleOnlyClick" checked>
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+
+        <div class="toggle-switch-group">
+          <span>Rebotar en bordes</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleBounce" checked>
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Color Palettes -->
+      <div class="panel-section">
+        <h3>Gama Cromática</h3>
+        <div class="palette-picker" id="palettePicker">
+          <div class="color-option active" data-palette="0" title="Chispas de Oro" style="background: linear-gradient(90deg, #ff8800, #ffaa00, #ffeeaa);"></div>
+          <div class="color-option" data-palette="1" title="Ola de Océano" style="background: linear-gradient(90deg, #0055ff, #00d2ff, #00ffd2);"></div>
+          <div class="color-option" data-palette="2" title="Fuego y Lava" style="background: linear-gradient(90deg, #ff0000, #ff3c00, #ffbb00);"></div>
+          <div class="color-option" data-palette="3" title="Matriz Cyberpunk" style="background: linear-gradient(90deg, #00ff66, #33ffbb, #aaffff);"></div>
+          <div class="color-option" data-palette="4" title="Fantasía Arcoíris" style="background: linear-gradient(90deg, #ff007f, #7f00ff, #01f2ff);"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Keyboard Guide (only visible on large screens) -->
+    <footer class="bottom-dock interactive">
+      <div class="keyboard-hints" id="keyboardHints">
+        <div class="hint-item"><kbd>▲</kbd> / <kbd>▼</kbd> Partículas</div>
+        <div class="hint-item"><kbd>◀</kbd> / <kbd>▶</kbd> Ángulo Gravedad</div>
+        <div class="hint-item"><kbd>G</kbd> / <kbd>Shift+G</kbd> Fuerza Gravedad</div>
+        <div class="hint-item"><kbd>C</kbd> Paleta</div>
+        <div class="hint-item"><kbd>1</kbd> - <kbd>5</kbd> Presets</div>
+        <div class="hint-item"><kbd>Espacio</kbd> Pausar</div>
+        <div class="hint-item"><kbd>H</kbd> Controles</div>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
