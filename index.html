@@ -49,7 +49,7 @@
           <button class="btn-preset" data-preset="3">Cascada <span class="kbd-hint">3</span></button>
           <button class="btn-preset" data-preset="4">Volcán <span class="kbd-hint">4</span></button>
           <button class="btn-preset" data-preset="5">Tormenta <span class="kbd-hint">5</span></button>
-          <button class="btn-preset preset-warp-btn" data-preset="6">Warp <span class="kbd-hint">6</span></button>
+          <button class="btn-preset" data-preset="6">Warp <span class="kbd-hint">6</span></button>
         </div>
       </div>
 
@@ -102,6 +102,14 @@
           <input type="range" id="sliderSpeed" min="1" max="15" step="0.5" value="5">
         </div>
 
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Tamaño Inicial</span>
+            <span class="value" id="valStartSize">1.0x</span>
+          </div>
+          <input type="range" id="sliderStartSize" min="0.5" max="3" step="0.1" value="1">
+        </div>
+
         <!-- Radio del Emisor -->
         <div class="slider-group">
           <div class="slider-label">
@@ -151,12 +159,18 @@
       <div class="panel-section">
         <h3>Gama Cromática</h3>
         <div class="palette-picker" id="palettePicker">
+          <!-- Gold Sparks -->
           <div class="color-option active" data-palette="0" title="Chispas de Oro" style="background: linear-gradient(90deg, #ff8800, #ffaa00, #ffeeaa);"></div>
+          <!-- Ocean Wave -->
           <div class="color-option" data-palette="1" title="Ola de Océano" style="background: linear-gradient(90deg, #0055ff, #00d2ff, #00ffd2);"></div>
+          <!-- Lava Burst -->
           <div class="color-option" data-palette="2" title="Fuego y Lava" style="background: linear-gradient(90deg, #ff0000, #ff3c00, #ffbb00);"></div>
+          <!-- Neon Matrix -->
           <div class="color-option" data-palette="3" title="Matriz Cyberpunk" style="background: linear-gradient(90deg, #00ff66, #33ffbb, #aaffff);"></div>
+          <!-- Rainbow Dream -->
           <div class="color-option" data-palette="4" title="Fantasía Arcoíris" style="background: linear-gradient(90deg, #ff007f, #7f00ff, #01f2ff);"></div>
         </div>
+        <button class="btn-aux" id="toggleAutoPaletteBtn" type="button">Colores auto: Off <span class="kbd-hint">V</span></button>
       </div>
 
     </div>
@@ -167,12 +181,20 @@
         <div class="hint-item"><kbd>▲</kbd> / <kbd>▼</kbd> Partículas</div>
         <div class="hint-item"><kbd>◀</kbd> / <kbd>▶</kbd> Ángulo Gravedad</div>
         <div class="hint-item"><kbd>G</kbd> / <kbd>Shift+G</kbd> Fuerza Gravedad</div>
+        <div class="hint-item"><kbd>Q</kbd> / <kbd>A</kbd> Vida</div>
+        <div class="hint-item"><kbd>W</kbd> / <kbd>S</kbd> Velocidad</div>
+        <div class="hint-item"><kbd>E</kbd> / <kbd>D</kbd> Tamaño Inicial</div>
+        <div class="hint-item"><kbd>R</kbd> / <kbd>F</kbd> Radio Emisor</div>
+        <div class="hint-item"><kbd>T</kbd> / <kbd>Y</kbd> Dispersión</div>
+        <div class="hint-item"><kbd>U</kbd> / <kbd>J</kbd> Estela</div>
         <div class="hint-item"><kbd>C</kbd> Paleta</div>
-        <div class="hint-item"><kbd>1</kbd> - <kbd>5</kbd> Presets</div>
+        <div class="hint-item"><kbd>V</kbd> Colores Auto</div>
+        <div class="hint-item"><kbd>1</kbd> - <kbd>6</kbd> Presets</div>
         <div class="hint-item"><kbd>Espacio</kbd> Pausar</div>
         <div class="hint-item"><kbd>H</kbd> Controles</div>
+        <div class="hint-item"><kbd>M</kbd> Atajos</div>
       </div>
-
+      <button class="btn-aux dock-btn" id="toggleHintsBtn" type="button">Ocultar atajos <span class="kbd-hint">M</span></button>
     </footer>
 
   </div>
