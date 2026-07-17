@@ -259,6 +259,34 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: translateY(-2px);
 }
 
+.btn-aux {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn-aux:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-aux.active {
+  background: linear-gradient(135deg, rgba(255, 98, 0, 0.15), rgba(255, 98, 0, 0.05));
+  border-color: var(--accent-color);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
 /* Atajos / Teclado footer panel */
 .keyboard-hints {
   background: var(--panel-bg);
@@ -291,6 +319,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
   pointer-events: none;
 }
 
+.dock-btn {
+  white-space: nowrap;
+}
+
 .hint-item {
   display: flex;
   align-items: center;
@@ -309,51 +341,6 @@ kbd {
   border-radius: 5px;
   font-size: 11px;
   box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-}
-
-.background-panel {
-  background: var(--panel-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 16px 18px;
-  max-width: 420px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: auto;
-}
-
-.background-panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.background-panel-header h3 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.background-panel-header p {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.background-modes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.preset-warp-btn {
-  text-align: center;
-  justify-content: center;
 }
 
 /* Toggle Panel Button */
@@ -465,9 +452,5 @@ input:checked + .slider-switch:before {
   }
   .bottom-dock {
     width: 100%;
-  }
-  .background-panel {
-    width: 100%;
-    max-width: none;
   }
 }
