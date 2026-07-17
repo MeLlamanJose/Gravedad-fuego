@@ -4,10 +4,17 @@ const CTX = CANVAS.getContext('2d');
 const LIMITS = {
   particles: { min: 100, max: 5000, step: 100 },
   gravity: { min: -0.5, max: 1.5, step: 0.05 },
+  startSize: { min: 0.5, max: 3, step: 0.1 },
+  life: { min: 30, max: 300, step: 10 },
+  speed: { min: 1, max: 15, step: 0.5 },
+  emitterRadius: { min: 0, max: 150, step: 5 },
+  dispersion: { min: 0, max: 360, step: 10 },
+  trailLength: { min: 0, max: 8, step: 0.2 },
   angleStep: 5,
   offscreenMargin: 150,
   emitterHintIdleMs: 1200,
-  rocketSpawnInterval: 60
+  rocketSpawnInterval: 60,
+  autoPaletteInterval: 32
 };
 
 const STATE = {
@@ -18,15 +25,19 @@ const STATE = {
   manualAngle: 90,
   lifespan: 120,
   speed: 5,
+  startSize: 1,
   paletteIndex: 0,
   presetIndex: 1,
   paused: false,
   panelVisible: true,
+  hintsVisible: true,
   onlyClick: true,
   bounce: true,
   emitterRadius: 0,
   dispersion: 360,
-  trailLength: 2.0
+  trailLength: 2.0,
+  autoPalette: false,
+  autoPaletteTick: 0
 };
 
 const PALETTES = [
@@ -288,6 +299,8 @@ const UI = {
   controlPanel: document.getElementById('controlPanel'),
   keyboardHints: document.getElementById('keyboardHints'),
   togglePanelBtn: document.getElementById('togglePanelBtn'),
+  toggleHintsBtn: document.getElementById('toggleHintsBtn'),
+  toggleAutoPaletteBtn: document.getElementById('toggleAutoPaletteBtn'),
   presetButtons: document.querySelectorAll('.btn-preset[data-preset]'),
   colorOptions: document.querySelectorAll('.color-option'),
   toggles: {
@@ -300,6 +313,7 @@ const UI = {
     angle: { el: document.getElementById('sliderAngle'), val: document.getElementById('valAngle'), format: (value) => `${value}°` },
     life: { el: document.getElementById('sliderLife'), val: document.getElementById('valLife'), format: (value) => `${value}` },
     speed: { el: document.getElementById('sliderSpeed'), val: document.getElementById('valSpeed'), format: (value) => `${value}` },
+    startSize: { el: document.getElementById('sliderStartSize'), val: document.getElementById('valStartSize'), format: (value) => `${Number.parseFloat(value).toFixed(1)}x` },
     emitterRadius: { el: document.getElementById('sliderEmitterRadius'), val: document.getElementById('valEmitterRadius'), format: (value) => `${value}px` },
     dispersion: { el: document.getElementById('sliderDispersion'), val: document.getElementById('valDispersion'), format: (value) => `${value}°` },
     trailLength: { el: document.getElementById('sliderTrailLength'), val: document.getElementById('valTrailLength'), format: (value) => Number.parseFloat(value).toFixed(1) }
@@ -330,6 +344,10 @@ const sliderBindings = {
   speed: {
     get: () => STATE.speed,
     set: (value) => { STATE.speed = Number.parseFloat(value); }
+  },
+  startSize: {
+    get: () => STATE.startSize,
+    set: (value) => { STATE.startSize = Number.parseFloat(value); }
   },
   emitterRadius: {
     get: () => STATE.emitterRadius,
@@ -368,6 +386,10 @@ function getSpawnCoords(baseX, baseY) {
 
 function emitParticle(x, y, vx, vy, life, size) {
   PARTICLES.spawn({ x, y, vx, vy, life, size });
+}
+
+function scaleParticleSize(size) {
+  return Math.max(0.2, size * STATE.startSize);
 }
 
 function getGravityVector() {
@@ -423,7 +445,7 @@ function spawnDirectionalBurst(rate, baseAngle, spreadRad, speedRange, sizeRange
       Math.cos(angle) * speed,
       Math.sin(angle) * speed + verticalBias,
       STATE.lifespan * (lifeRange.min + Math.random() * (lifeRange.max - lifeRange.min)),
-      sizeRange.min + Math.random() * (sizeRange.max - sizeRange.min)
+      scaleParticleSize(sizeRange.min + Math.random() * (sizeRange.max - sizeRange.min))
     );
   }
 }
@@ -463,7 +485,7 @@ function spawnFireworks() {
     rocket.vy += 0.15;
     rocket.fuse -= 1;
 
-    emitParticle(rocket.x, rocket.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 20, 2);
+    emitParticle(rocket.x, rocket.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 20, scaleParticleSize(2));
 
     if (rocket.fuse <= 0 || rocket.y < 50) {
       explodeFirework(rocket.x, rocket.y);
@@ -483,7 +505,7 @@ function explodeFirework(x, y) {
       Math.cos(angle) * speed,
       Math.sin(angle) * speed,
       STATE.lifespan * (0.5 + Math.random() * 0.5),
-      1.2 + Math.random() * 2
+      scaleParticleSize(1.2 + Math.random() * 2)
     );
   }
 }
@@ -540,7 +562,7 @@ function spawnWarp() {
       Math.cos(angle) * speed,
       Math.sin(angle) * speed,
       STATE.lifespan * (0.8 + Math.random() * 0.45),
-      1.4 + Math.random() * 2.8
+      scaleParticleSize(1.4 + Math.random() * 2.8)
     );
   }
 }
@@ -600,6 +622,14 @@ function renderEmitter() {
 function updateSimulation() {
   if (STATE.paused) {
     return;
+  }
+
+  if (STATE.autoPalette) {
+    STATE.autoPaletteTick += 1;
+    if (STATE.autoPaletteTick >= LIMITS.autoPaletteInterval) {
+      randomizePalette();
+      STATE.autoPaletteTick = 0;
+    }
   }
 
   if (STATE.presetIndex === 4) {
@@ -729,12 +759,21 @@ function syncAllSliders() {
 
 function changePalette(index) {
   STATE.paletteIndex = index;
+  STATE.autoPaletteTick = 0;
   UI.colorOptions.forEach((option) => {
     option.classList.toggle('active', Number.parseInt(option.dataset.palette, 10) === index);
   });
 
   document.documentElement.style.setProperty('--accent-color', PALETTES[index].accent);
   document.documentElement.style.setProperty('--accent-glow', `${PALETTES[index].accent}55`);
+}
+
+function randomizePalette() {
+  let nextIndex = STATE.paletteIndex;
+  while (nextIndex === STATE.paletteIndex && PALETTES.length > 1) {
+    nextIndex = Math.floor(Math.random() * PALETTES.length);
+  }
+  changePalette(nextIndex);
 }
 
 function changePreset(presetNum) {
@@ -753,6 +792,30 @@ function togglePanel() {
   STATE.panelVisible = !STATE.panelVisible;
   UI.controlPanel.classList.toggle('hidden', !STATE.panelVisible);
   UI.togglePanelBtn.classList.toggle('active', STATE.panelVisible);
+}
+
+function syncHintsButton() {
+  UI.toggleHintsBtn.innerHTML = `${STATE.hintsVisible ? 'Ocultar atajos' : 'Mostrar atajos'} <span class="kbd-hint">M</span>`;
+}
+
+function toggleHints() {
+  STATE.hintsVisible = !STATE.hintsVisible;
+  UI.keyboardHints.classList.toggle('hidden', !STATE.hintsVisible);
+  syncHintsButton();
+}
+
+function syncAutoPaletteButton() {
+  UI.toggleAutoPaletteBtn.classList.toggle('active', STATE.autoPalette);
+  UI.toggleAutoPaletteBtn.innerHTML = `Colores auto: ${STATE.autoPalette ? 'On' : 'Off'} <span class="kbd-hint">V</span>`;
+}
+
+function toggleAutoPalette() {
+  STATE.autoPalette = !STATE.autoPalette;
+  STATE.autoPaletteTick = 0;
+  if (STATE.autoPalette) {
+    randomizePalette();
+  }
+  syncAutoPaletteButton();
 }
 
 function bindSliders() {
@@ -776,7 +839,9 @@ function bindPresets() {
 function bindPalettePicker() {
   UI.colorOptions.forEach((option) => {
     option.addEventListener('click', () => {
+      STATE.autoPalette = false;
       changePalette(Number.parseInt(option.dataset.palette, 10));
+      syncAutoPaletteButton();
     });
   });
 }
@@ -796,7 +861,9 @@ function bindToggles() {
 }
 
 function cyclePalette() {
+  STATE.autoPalette = false;
   changePalette((STATE.paletteIndex + 1) % PALETTES.length);
+  syncAutoPaletteButton();
 }
 
 function adjustParticleCount(delta) {
@@ -823,6 +890,20 @@ function adjustManualAngle(delta) {
   syncSlider('angle');
 }
 
+function adjustSliderValue(key, delta, decimals = 0) {
+  const binding = sliderBindings[key];
+  const limits = LIMITS[key];
+  if (!binding || !limits) {
+    return;
+  }
+
+  const current = Number(binding.get());
+  const next = clamp(current + delta, limits.min, limits.max);
+  const value = decimals > 0 ? next.toFixed(decimals) : `${Math.round(next)}`;
+  binding.set(value);
+  syncSlider(key);
+}
+
 function bindKeyboard() {
   window.addEventListener('keydown', (event) => {
     switch (event.key.toLowerCase()) {
@@ -832,6 +913,9 @@ function bindKeyboard() {
       case ' ':
         event.preventDefault();
         STATE.paused = !STATE.paused;
+        break;
+      case 'm':
+        toggleHints();
         break;
       case 'arrowup':
         event.preventDefault();
@@ -852,8 +936,47 @@ function bindKeyboard() {
       case 'g':
         adjustGravity(event.shiftKey ? -LIMITS.gravity.step : LIMITS.gravity.step);
         break;
+      case 'q':
+        adjustSliderValue('life', LIMITS.life.step);
+        break;
+      case 'a':
+        adjustSliderValue('life', -LIMITS.life.step);
+        break;
+      case 'w':
+        adjustSliderValue('speed', LIMITS.speed.step, 1);
+        break;
+      case 's':
+        adjustSliderValue('speed', -LIMITS.speed.step, 1);
+        break;
+      case 'e':
+        adjustSliderValue('startSize', LIMITS.startSize.step, 1);
+        break;
+      case 'd':
+        adjustSliderValue('startSize', -LIMITS.startSize.step, 1);
+        break;
+      case 'r':
+        adjustSliderValue('emitterRadius', LIMITS.emitterRadius.step);
+        break;
+      case 'f':
+        adjustSliderValue('emitterRadius', -LIMITS.emitterRadius.step);
+        break;
+      case 't':
+        adjustSliderValue('dispersion', LIMITS.dispersion.step);
+        break;
+      case 'y':
+        adjustSliderValue('dispersion', -LIMITS.dispersion.step);
+        break;
+      case 'u':
+        adjustSliderValue('trailLength', LIMITS.trailLength.step, 1);
+        break;
+      case 'j':
+        adjustSliderValue('trailLength', -LIMITS.trailLength.step, 1);
+        break;
       case 'c':
         cyclePalette();
+        break;
+      case 'v':
+        toggleAutoPalette();
         break;
       case '1':
       case '2':
@@ -877,6 +1000,8 @@ function bindPointerEvents() {
 
 function bindUI() {
   UI.togglePanelBtn.addEventListener('click', togglePanel);
+  UI.toggleHintsBtn.addEventListener('click', toggleHints);
+  UI.toggleAutoPaletteBtn.addEventListener('click', toggleAutoPalette);
   bindSliders();
   bindPresets();
   bindPalettePicker();
@@ -890,6 +1015,8 @@ function init() {
   bindUI();
   changePalette(STATE.paletteIndex);
   changePreset(1);
+  syncAutoPaletteButton();
+  syncHintsButton();
   window.addEventListener('resize', resize);
   frame();
 }
